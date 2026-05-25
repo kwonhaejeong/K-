@@ -973,11 +973,23 @@ const detailHoleData = [
     let startX = 0, startY = 0;
     let isDragging = false;
 
-// 기존의 [] 부분을 localStorage에서 가져오는 코드로 대체합니다.
+// 1. 기존의 긴 변수 선언 줄을 완전히 지우고 아래 코드를 붙여넣으세요.
 let savedScores = JSON.parse(localStorage.getItem('golf_scores')) || [];
 let savedPhotos = JSON.parse(localStorage.getItem('golf_photos')) || [];
 
-let currentEditingId = null, tempReviews = [], currentEditingReviewId = null, currentHighlightIndex = 2, isEditMode = false, currentHoleId = null, currentHoleIndex = -1, isEditingImage = false, imageDataStore = {}, touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+let currentEditingId = null;
+let tempReviews = [];
+let currentEditingReviewId = null;
+let currentHighlightIndex = 2;
+let isEditMode = false;
+let currentHoleId = null;
+let currentHoleIndex = -1;
+let isEditingImage = false;
+let imageDataStore = {};
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+// 변수 선언 끝
 
     function toggleTheme() { document.body.classList.toggle('light-mode'); }
     function showView(viewName) {
@@ -1648,6 +1660,17 @@ localStorage.setItem('golf_photos', JSON.stringify(savedPhotos)); renderPhotoGri
     renderList();
 
     window.onload = () => { renderList(); };
+
+// 페이지가 켜질 때 저장된 데이터를 화면에 뿌려주는 핵심 명령입니다.
+window.addEventListener('load', () => {
+    try {
+        if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
+        if (typeof renderScoreGallery === 'function') renderScoreGallery();
+    } catch (e) {
+        console.error("데이터 로드 중 오류 발생:", e);
+    }
+});
+
 </script>
 </body>
 </html>
