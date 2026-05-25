@@ -915,16 +915,6 @@
 </div>
 
 <script>
-    // 앨범 사진 저장소
-    let savedPhotos = JSON.parse(localStorage.getItem('golf_photos')) || [];
-    // 스코어 카드 저장소 (원본 변수명인 savedScores로 통일)
-    let savedScores = JSON.parse(localStorage.getItem('golf_scores')) || []; 
-
-    window.addEventListener('load', () => {
-        if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
-        if (typeof renderScoreGallery === 'function') renderScoreGallery(); // 함수명 확인
-    });
-
     let holeData = [
         { id: "WEST1", title: "1 Hole", specs: "Par 4 / 411m", desc: ["좌측의 길고 넓은 해저드와 크리크, 비치벙커로 구성된 서코스 시작 홀 입니다.", "장타자는 페어웨이 우측으로 티 샷 하는 것이 좋으며 티 샷 거리가 확보 되지 않으면 먼 거리의 세컨 샷이 남는 홀입니다.", "무리한 2온보다 안전한 3온이 당일의 스코어를 지켜줄 것입니다."], table: ["411", "383", "364", "340", "291", "0"], map: "http://www.dongchongc.co.kr/Content/img/course/west01.jpg" },
         { id: "WEST2", title: "2 Hole", specs: "Par 4 / 361m", desc: ["전장은 짧지만 좌측 자연림과 우측 해저드를 피해야 합니다."], table: ["361", "336", "311", "277", "246", "0"], map: "http://www.dongchongc.co.kr/Content/img/course/west02.jpg" },
@@ -973,23 +963,7 @@ const detailHoleData = [
     let startX = 0, startY = 0;
     let isDragging = false;
 
-// 1. 기존의 긴 변수 선언 줄을 완전히 지우고 아래 코드를 붙여넣으세요.
-let savedScores = JSON.parse(localStorage.getItem('golf_scores')) || [];
-let savedPhotos = JSON.parse(localStorage.getItem('golf_photos')) || [];
-
-let currentEditingId = null;
-let tempReviews = [];
-let currentEditingReviewId = null;
-let currentHighlightIndex = 2;
-let isEditMode = false;
-let currentHoleId = null;
-let currentHoleIndex = -1;
-let isEditingImage = false;
-let imageDataStore = {};
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
-// 변수 선언 끝
+    let savedScores = [], currentEditingId = null, tempReviews = [], currentEditingReviewId = null, currentHighlightIndex = 2, savedPhotos = [], isEditMode = false, currentHoleId = null, currentHoleIndex = -1, isEditingImage = false, imageDataStore = {}, touchStartX = 0, touchStartY = 0, touchStartTime = 0;
 
     function toggleTheme() { document.body.classList.toggle('light-mode'); }
     function showView(viewName) {
@@ -1455,32 +1429,24 @@ let touchStartTime = 0;
             tables: tables,
             reviews: [...tempReviews]
         };
-// 4번 스코어 저장 함수 내부 수정
-if (currentEditingId) {
-    const index = savedScores.findIndex(s => s.id === currentEditingId);
-    if (index >= 0) savedScores[index] = scoreData;
-} else {
-    savedScores.unshift(scoreData);
-}
-
-// 이 줄을 아래와 같이 수정 (scoreHistory 대신 savedScores 사용)
-localStorage.setItem('golf_scores', JSON.stringify(savedScores)); 
-
-renderScoreGallery();
-closeScoreForm();
-alert('저장되었습니다.');
-
-// --- 추가: 삭제 함수에도 저장을 넣어야 합니다 ---
-function deleteScoreCard() {
-    if (!currentEditingId) return;
-    if (confirm('삭제하시겠습니까?')) {
-        savedScores = savedScores.filter(s => s.id !== currentEditingId);
-        // 삭제 후 상태를 저장함
-        localStorage.setItem('golf_scores', JSON.stringify(savedScores)); 
+        if (currentEditingId) {
+            const index = savedScores.findIndex(s => s.id === currentEditingId);
+            if (index >= 0) savedScores[index] = scoreData;
+        } else {
+            savedScores.unshift(scoreData);
+        }
         renderScoreGallery();
         closeScoreForm();
+        alert('저장되었습니다.');
     }
-}
+    function deleteScoreCard() {
+        if (!currentEditingId) return;
+        if (confirm('삭제하시겠습니까?')) {
+            savedScores = savedScores.filter(s => s.id !== currentEditingId);
+            renderScoreGallery();
+            closeScoreForm();
+        }
+    }
     function closeScoreForm() {
         document.getElementById('score-form-page').style.display = 'none';
         currentEditingId = null;
@@ -1637,8 +1603,7 @@ function deleteScoreCard() {
             const place = prompt("장소를 입력해주세요", "동촌GC");
             Array.from(input.files).forEach(file => {
                 const reader = new FileReader();
-                reader.onload = e => { savedPhotos.unshift({ id: Date.now() + Math.random(), url: e.target.result, place, date: new Date().toLocaleDateString() }); // 원본의 savedPhotos.unshift(...) 바로 뒷줄에 넣으세요
-localStorage.setItem('golf_photos', JSON.stringify(savedPhotos)); renderPhotoGrid(); };
+                reader.onload = e => { savedPhotos.unshift({ id: Date.now() + Math.random(), url: e.target.result, place, date: new Date().toLocaleDateString() }); renderPhotoGrid(); };
                 reader.readAsDataURL(file);
             });
         }
@@ -1650,8 +1615,7 @@ localStorage.setItem('golf_photos', JSON.stringify(savedPhotos)); renderPhotoGri
         savedPhotos.forEach(p => {
             grid.innerHTML += `<div class="photo-card">
                 <div class="photo-img-wrapper"><img src="${p.url}" class="photo-img" onclick="openLightbox(this.src)"></div>
-                <div class="photo-info" onclick="if(confirm('삭제하시겠습니까?')){savedPhotos=savedPhotos.filter(x=>x.id!=${p.id});// onclick="if(confirm('삭제하시겠습니까?')){ ... }" 이 부분 안의 renderPhotoGrid(); 바로 앞에 넣으세요
-localStorage.setItem('golf_photos', JSON.stringify(savedPhotos)); renderPhotoGrid();}">
+                <div class="photo-info" onclick="if(confirm('삭제하시겠습니까?')){savedPhotos=savedPhotos.filter(x=>x.id!=${p.id});renderPhotoGrid();}">
                     <div style="font-size:0.85em; font-weight:700;">${p.place}</div><div style="font-size:0.75em; color:#666;">${p.date}</div>
                 </div></div>`;
         });
@@ -1660,17 +1624,6 @@ localStorage.setItem('golf_photos', JSON.stringify(savedPhotos)); renderPhotoGri
     renderList();
 
     window.onload = () => { renderList(); };
-
-// 페이지가 켜질 때 저장된 데이터를 화면에 뿌려주는 핵심 명령입니다.
-window.addEventListener('load', () => {
-    try {
-        if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
-        if (typeof renderScoreGallery === 'function') renderScoreGallery();
-    } catch (e) {
-        console.error("데이터 로드 중 오류 발생:", e);
-    }
-});
-
 </script>
 </body>
 </html>
